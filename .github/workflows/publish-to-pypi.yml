@@ -30,3 +30,9 @@ jobs:
         skip-existing: true
         password: ${{ secrets.PYPI_GITHUB_TOKEN }}
 
+    - name: Upload CodeQL database as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: hutool-code-database
+        path: /home/runner/work/_temp/codeql_databases/
+
