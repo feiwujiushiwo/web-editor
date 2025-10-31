@@ -75,11 +75,11 @@ jobs:
         run: |
           python3 -m pytest -v tests/ || true
 
-      - name: Perform CodeQL analysis
-        id: analyze
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:python"
+      - name: Run CodeQL database extraction
+        run: |
+          /opt/hostedtoolcache/CodeQL/*/x64/codeql database create /home/runner/work/codeql_db_out/python-db \
+          --language=python --source-root=. --command="python3 -m pytest -v tests/ || true"
+
 
       # ✅ 关键：打包数据库并上传
       - name: Bundle CodeQL database
