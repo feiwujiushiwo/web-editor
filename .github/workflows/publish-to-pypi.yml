@@ -1,11 +1,13 @@
 name: Build & Publish with CodeQL 🐍
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     tags:
       - '*'
+
 
 jobs:
   # === Job 1: 构建并发布 PyPI 包 ===
