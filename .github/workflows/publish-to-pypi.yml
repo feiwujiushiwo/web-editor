@@ -8,15 +8,15 @@ on:
     tags:
       - '*'
 
-
 jobs:
-  # === Job 1: 构建并发布 PyPI 包 ===
+  # === Job: 构建并发布 PyPI 包 ===
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 10
 
@@ -29,11 +29,15 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install wheel build
-          python3 -m pip install -r requirements.txt
+          if [ -f requirements.txt ]; then
+            python3 -m pip install -r requirements.txt
+          fi
 
       - name: Run Unit Tests
         run: |
-          python3 -m pip install -r dev-requirements.txt || true
+          if [ -f dev-requirements.txt ]; then
+            python3 -m pip install -r dev-requirements.txt
+          fi
           python3 -m pytest -v tests/ || true
 
       - name: Build source and wheel distributions
@@ -46,52 +50,3 @@ jobs:
         with:
           skip-existing: true
           password: ${{ secrets.PYPI_GITHUB_TOKEN }}
-
-  # === Job 2: 生成并上传 CodeQL 数据库 ===
-  build-codeql-db:
-    name: Build and upload CodeQL database
-    runs-on: ubuntu-latest
-
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: python
-
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r requirements.txt || true
-
-      - name: Run tests (optional, helps CodeQL collect data)
-        run: |
-          python3 -m pytest -v tests/ || true
-
-      - name: Run CodeQL database extraction
-        run: |
-          /opt/hostedtoolcache/CodeQL/*/x64/codeql database create /home/runner/work/codeql_db_out/python-db \
-          --language=python --source-root=. --command="python3 -m pytest -v tests/ || true"
-
-
-      # ✅ 关键：打包数据库并上传
-      - name: Bundle CodeQL database
-        run: |
-          mkdir -p /home/runner/work/codeql_db_out/
-          /opt/hostedtoolcache/CodeQL/*/x64/codeql/codeql database bundle \
-            /home/runner/work/_temp/codeql_databases/python \
-            --output=/home/runner/work/codeql_db_out/python-codeql.zip \
-            --name=python-codeql
-
-      - name: Upload CodeQL database as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: codeql-python-database
-          path: /home/runner/work/codeql_db_out/python-codeql.zip
